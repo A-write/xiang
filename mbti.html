@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI性格测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 20px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .btn {
+            background: #ff4081;
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            font-size: 1.3rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #c60055, 0 8px 15px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+            margin: 10px;
+            font-weight: bold;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #c60055, 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            z-index: 9999;
+        }
+        
+        /* MBTI测试部分样式 */
+        .mbti-test {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .question-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .question {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .option {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .option:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .option.selected {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #ffd700;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #ffd700;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .result-container {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        
+        .result-type {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .result-description {
+            text-align: left;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .restart-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        
+        .question-counter {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- MBTI测试部分 -->
+    <div class="mbti-test" id="mbtiTest">
+        <h1>MBTI性格测试</h1>
+        <p>请根据你的真实情况选择最符合的选项</p>
+        
+        <div class="question-counter" id="questionCounter">第1题/共16题</div>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div class="question-container" id="questionContainer">
+            <!-- 问题将通过JavaScript动态添加 -->
+        </div>
+        
+        <button class="btn" id="nextBtn" style="display:none;">下一题</button>
+        <button class="btn" id="submitBtn" style="display:none;">查看结果</button>
+    </div>
+    
+    <!-- 测试结果部分 -->
+    <div class="result-container" id="resultContainer">
+        <!-- 结果将通过JavaScript动态添加 -->
+    </div>
+    
+    <script>
+        // 获取DOM元素
+        const mbtiTest = document.getElementById('mbtiTest');
+        const questionContainer = document.getElementById('questionContainer');
+        const questionCounter = document.getElementById('questionCounter');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const progress = document.getElementById('progress');
+        const resultContainer = document.getElementById('resultContainer');
+        
+        let currentQuestion = 0;
+        let answers = [];
+        
+        // MBTI测试题目 - 16道题，每道题4个选项
+        const questions = [
+            {
+                question: "当你在一个聚会上，你通常：",
+                options: [
+                    { text: "主动与不同的人交谈，认识新朋友", type: "E" },
+                    { text: "主要和熟悉的朋友聊天", type: "I" },
+                    { text: "观察周围的人和事，偶尔参与对话", type: "I" },
+                    { text: "成为谈话的中心，带动气氛", type: "E" }
+                ]
+            },
+            {
+                question: "你的朋友突然取消周末计划，你会：",
+                options: [
+                    { text: "立即联系其他朋友，安排新的活动", type: "E" },
+                    { text: "享受意外的独处时间，做自己喜欢的事", type: "I" },
+                    { text: "有些失望，但很快找到替代方案", type: "P" },
+                    { text: "重新规划时间表，确保周末不虚度", type: "J" }
+                ]
+            },
+            {
+                question: "工作中接到一个新项目，你首先会：",
+                options: [
+                    { text: "制定详细的时间表和步骤", type: "J" },
+                    { text: "头脑风暴各种可能的创意和方向", type: "N" },
+                    { text: "收集所有相关资料和数据", type: "S" },
+                    { text: "与团队成员讨论分工和想法", type: "E" }
+                ]
+            },
+            {
+                question: "当朋友向你倾诉感情问题，你会：",
+                options: [
+                    { text: "分析问题的根源，提供理性建议", type: "T" },
+                    { text: "感同身受，给予情感支持", type: "F" },
+                    { text: "分享类似经历，表示理解", type: "F" },
+                    { text: "帮助朋友看清各种选择的利弊", type: "T" }
+                ]
+            },
+            {
+                question: "你正在准备一个重要会议，突然发现材料有误，你会：",
+                options: [
+                    { text: "立即修正错误，确保会议顺利进行", type: "J" },
+                    { text: "快速思考如何调整演讲内容", type: "P" },
+                    { text: "寻求同事帮助，共同解决问题", type: "E" },
+                    { text: "评估影响程度，决定是否推迟会议", type: "T" }
+                ]
+            },
+            {
+                question: "在规划旅行时，你更倾向于：",
+                options: [
+                    { text: "制定详细的行程表，包括每个景点", type: "J" },
+                    { text: "只订机票酒店，其余随性安排", type: "P" },
+                    { text: "研究当地文化，寻找独特体验", type: "N" },
+                    { text: "参考他人评价，选择热门景点", type: "S" }
+                ]
+            },
+            {
+                question: "当团队意见分歧时，你通常会：",
+                options: [
+                    { text: "分析各方观点，寻找最优解", type: "T" },
+                    { text: "关注团队和谐，调解矛盾", type: "F" },
+                    { text: "提出创新方案，打破僵局", type: "N" },
+                    { text: "基于过往经验，提供实际建议", type: "S" }
+                ]
+            },
+            {
+                question: "你的学习方式更接近：",
+                options: [
+                    { text: "按部就班，循序渐进掌握知识", type: "S" },
+                    { text: "跳跃式学习，先把握整体框架", type: "N" },
+                    { text: "与他人讨论，加深理解", type: "E" },
+                    { text: "独自钻研，反复思考", type: "I" }
+                ]
+            },
+            {
+                question: "面对一个复杂问题，你通常：",
+                options: [
+                    { text: "分解问题，逐一解决", type: "S" },
+                    { text: "寻找模式，从整体上理解", type: "N" },
+                    { text: "咨询专家或查阅资料", type: "T" },
+                    { text: "考虑各种可能性，不急于下结论", type: "P" }
+                ]
+            },
+            {
+                question: "在团队中，你更愿意扮演的角色是：",
+                options: [
+                    { text: "组织者，确保任务按时完成", type: "J" },
+                    { text: "创意者，提供新思路", type: "N" },
+                    { text: "协调者，促进团队合作", type: "F" },
+                    { text: "执行者，专注于具体任务", type: "S" }
+                ]
+            },
+            {
+                question: "当你的计划被打乱时，你的第一反应是：",
+                options: [
+                    { text: "感到烦躁，努力回归原计划", type: "J" },
+                    { text: "灵活调整，寻找新机会", type: "P" },
+                    { text: "分析原因，防止再次发生", type: "T" },
+                    { text: "接受现实，寻找积极面", type: "F" }
+                ]
+            },
+            {
+                question: "你更喜欢的工作环境是：",
+                options: [
+                    { text: "开放、互动的团队空间", type: "E" },
+                    { text: "安静、独立的个人办公室", type: "I" },
+                    { text: "灵活、自主的工作安排", type: "P" },
+                    { text: "结构清晰、流程规范的环境", type: "J" }
+                ]
+            },
+            {
+                question: "做重要决定时，你主要依赖：",
+                options: [
+                    { text: "逻辑分析和客观数据", type: "T" },
+                    { text: "个人价值观和感受", type: "F" },
+                    { text: "过去的经验和事实", type: "S" },
+                    { text: "直觉和未来可能性", type: "N" }
+                ]
+            },
+            {
+                question: "在社交网络上，你通常：",
+                options: [
+                    { text: "经常分享生活点滴和想法", type: "E" },
+                    { text: "偶尔发布重要事件和思考", type: "I" },
+                    { text: "主要浏览，很少主动发布", type: "I" },
+                    { text: "积极参与讨论和互动", type: "E" }
+                ]
+            },
+            {
+                question: "当面对批评时，你通常会：",
+                options: [
+                    { text: "理性分析批评的合理性", type: "T" },
+                    { text: "关注批评带来的情感影响", type: "F" },
+                    { text: "立即思考如何改进", type: "J" },
+                    { text: "保持开放态度，但不急于改变", type: "P" }
+                ]
+            },
+            {
+                question: "你的理想周末是：",
+                options: [
+                    { text: "与朋友聚会，参加社交活动", type: "E" },
+                    { text: "在家休息，享受个人时光", type: "I" },
+                    { text: "尝试新事物，探索未知领域", type: "N" },
+                    { text: "完成计划中的任务和爱好", type: "J" }
+                ]
+            }
+        ];
+        
+        // MBTI类型描述
+        const mbtiDescriptions = {
+            "ISTJ": "务实、有条理、负责任，注重细节和传统。你是可靠和值得信赖的人，喜欢按计划行事。",
+            "ISFJ": "温暖、体贴、尽责，关心他人的需求。你非常重视和谐的人际关系。",
+            "INFJ": "富有洞察力、理想主义，致力于帮助他人成长。你有很强的直觉和同情心。",
+            "INTJ": "战略家、独立、有远见，善于制定长期计划。你擅长看到全局和未来可能性。",
+            "ISTP": "灵活、务实、喜欢动手解决问题。你擅长在危机中保持冷静。",
+            "ISFP": "温和、敏感、艺术气质，享受当下时刻。你重视个人价值观和审美。",
+            "INFP": "理想主义、忠诚于自己的价值观，富有创造力。你渴望让世界变得更美好。",
+            "INTP": "逻辑、好奇、独立思考，喜欢理论分析。你善于发现模式和联系。",
+            "ESTP": "精力充沛、喜欢冒险，善于应对突发事件。你享受活在当下。",
+            "ESFP": "活泼、热情、喜欢娱乐和与人交往。你擅长营造欢乐氛围。",
+            "ENFP": "热情、富有想象力，能看到各种可能性。你充满激情和创造力。",
+            "ENTP": "聪明、创新、喜欢辩论和智力挑战。你善于看到问题的多个角度。",
+            "ESTJ": "务实、果断、善于组织和执行。你重视效率和秩序。",
+            "ESFJ": "友善、尽责、重视和谐的人际关系。你擅长照顾他人需求。",
+            "ENFJ": "有魅力、有同情心，善于激励他人。你天生具有领导才能。",
+            "ENTJ": "果断、战略思维，天生的领导者。你擅长组织和执行复杂计划。"
+        };
+        
+        // 页面加载后直接显示第一题
+        window.onload = function() {
+            showQuestion(0);
+        };
+        
+        // 下一题按钮
+        nextBtn.addEventListener('click', function() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            } else {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+            }
+        });
+        
+        // 提交答案
+        submitBtn.addEventListener('click', function() {
+            calculateResult();
+        });
+        
+        // 显示问题
+        function showQuestion(index) {
+            const question = questions[index];
+            questionContainer.innerHTML = `
+                <div class="question">${question.question}</div>
+                <div class="options">
+                    ${question.options.map((option, i) => `
+                        <div class="option" data-type="${option.type}">${String.fromCharCode(65 + i)}. ${option.text}</div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // 更新进度条和计数器
+            progress.style.width = `${((index + 1) / questions.length) * 100}%`;
+            questionCounter.textContent = `第${index + 1}题/共${questions.length}题`;
+            
+            // 添加选项点击事件
+            const options = questionContainer.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    // 移除其他选项的选中状态
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    // 标记当前选项为选中
+                    this.classList.add('selected');
+                    // 保存答案
+                    answers[index] = this.getAttribute('data-type');
+                    // 显示下一题按钮
+                    nextBtn.style.display = 'inline-block';
+                });
+            });
+            
+            // 如果是最后一题，显示提交按钮
+            if (index === questions.length - 1) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+            }
+        }
+        
+        // 计算MBTI结果
+        function calculateResult() {
+            // 统计每个维度的选择
+            const dimensions = {
+                'E': 0, 'I': 0,
+                'S': 0, 'N': 0,
+                'T': 0, 'F': 0,
+                'J': 0, 'P': 0
+            };
+            
+            answers.forEach(answer => {
+                if (answer) dimensions[answer]++;
+            });
+            
+            // 确定每个维度的倾向
+            const mbtiType = 
+                (dimensions['E'] > dimensions['I'] ? 'E' : 'I') +
+                (dimensions['S'] > dimensions['N'] ? 'S' : 'N') +
+                (dimensions['T'] > dimensions['F'] ? 'T' : 'F') +
+                (dimensions['J'] > dimensions['P'] ? 'J' : 'P');
+            
+            // 显示结果
+            showResult(mbtiType);
+        }
+        
+        // 显示结果
+        function showResult(type) {
+            mbtiTest.style.display = 'none';
+            resultContainer.style.display = 'block';
+            
+            resultContainer.innerHTML = `
+                <div class="result-title">你的MBTI性格类型是</div>
+                <div class="result-type">${type}</div>
+                <div class="result-description">
+                    <p><strong>${type}型人格特点：</strong> ${mbtiDescriptions[type]}</p>
+                    <p>MBTI是一种人格类型指标，将人的性格分为16种类型。这个测试仅供参考，真正的性格是复杂多样的。</p>
+                </div>
+                <button class="restart-btn" id="restartBtn">重新测试</button>
+            `;
+            
+            // 添加重新测试按钮事件
+            document.getElementById('restartBtn').addEventListener('click', function() {
+                location.reload();
+            });
+            
+            // 创建彩色纸屑效果
+            createConfetti();
+        }
+        
+        // 创建纸屑效果
+        function createConfetti() {
+            const colors = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#90be6d', '#43aa8b', '#577590'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.opacity = '1';
+                document.body.appendChild(confetti);
+                
+                // 动画
+                const animation = confetti.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                    { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 3000,
+                    easing: 'cubic-bezier(0.1, 0.8, 0.2, 1)'
+                });
+                
+                // 动画结束后移除元素
+                animation.onfinish = () => {
+                    confetti.remove();
+                };
+            }
+        }
+    </script>
+</body>
+</html>
