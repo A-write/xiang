@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MBTI 人格测试 + 职业推荐 + 未来规划 & 生涯PPT(Markdown)</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#7c3aed; --muted:#94a3b8; --glass: rgba(255,255,255,0.03);
+      --success:#10b981;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:linear-gradient(180deg,#071027 0%, #07192f 60%); color:#e6eef8; padding:28px;}
+    .wrap{max-width:980px;margin:0 auto}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    header h1{font-size:20px;margin:0}
+
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(2,6,23,0.7);}
+    .muted{color:var(--muted);font-size:13px}
+
+    .questions{max-height:620px;overflow:auto;padding-right:6px}
+    .q{padding:12px;border-radius:8px;background:var(--glass);margin-bottom:10px}
+    .q h4{margin:0 0 8px 0;font-size:15px}
+    .opts{display:flex;gap:10px}
+    label.option{flex:1;background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px;border-radius:8px;cursor:pointer}
+    input[type=radio]{margin-right:8px}
+
+    .btn{display:inline-block;padding:10px 12px;border-radius:9px;background:linear-gradient(90deg,var(--accent),#4c1d95);color:white;border:none;cursor:pointer}
+    .secondary{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+
+    .result{font-size:16px}
+    .tag{display:inline-block;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.04);font-weight:600}
+
+    .career-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .career-item{padding:10px;border-radius:8px;background:rgba(0,0,0,0.25)}
+
+    textarea{width:100%;height:140px;background:#021024;border-radius:8px;color:#e6eef8;padding:10px;border:1px solid rgba(255,255,255,0.04)}
+
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+
+    @media(max-width:920px){.grid{grid-template-columns:1fr;}.card{padding:14px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div style="width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#2dd4bf);display:flex;align-items:center;justify-content:center;font-weight:700">MB</div>
+      <div>
+        <h1>MBTI 人格测试 + 职业推荐 + 未来规划</h1>
+        <div class="muted">填写问卷 → 得到 MBTI → 查看推荐职业与未来规划 → 导出生涯规划 PPT（Markdown）</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <main class="card">
+        <h3>一、MBTI 测试（20 题，倾向选择 A 或 B）</h3>
+        <div class="muted">请对每一题选择你更符合的一项（没有绝对标准，按第一直觉来）</div>
+
+        <div id="questions" class="questions"></div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+          <button class="btn" id="calcBtn">计算 MBTI & 显示结果</button>
+          <button class="secondary btn" id="resetBtn">重置问卷</button>
+          <div id="progress" style="margin-left:auto" class="muted">已答：<span id="answeredCount">0</span>/20</div>
+        </div>
+
+        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)">
+
+        <section id="resultSection" style="display:none">
+          <h3>测试结果</h3>
+          <div class="result">你的 MBTI 为： <span class="tag" id="mbtiTag"></span></div>
+          <div class="muted" id="scoreBreakdown"></div>
+
+          <h4 style="margin-top:12px">职业推荐</h4>
+          <div id="careerRec" class="career-list"></div>
+
+        </section>
+
+        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)">
+
+        <h3>二、未来规划测试（短问卷）</h3>
+        <div class="muted">根据你的目标、时间感与阻碍，系统会给出优先级与行动建议（请如实填写）</div>
+        <div style="display:grid;gap:10px;margin-top:10px">
+          <label>主要目标（简短描述）<input id="goalText" style="width:100%;padding:8px;border-radius:8px;margin-top:6px;border:1px solid rgba(255,255,255,0.04);background:#021024;color:#e6eef8"></label>
+          <label>实现时限（例如：6 个月 / 1 年 / 5 年）<input id="goalTimeline" style="width:100%;padding:8px;border-radius:8px;margin-top:6px;border:1px solid rgba(255,255,255,0.04);background:#021024;color:#e6eef8"></label>
+
+          <label>你认为主要阻碍是什么？（可多选）
+            <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+              <label style="background:rgba(255,255,255,0.02);padding:8px;border-radius:8px"><input type="checkbox" value="时间" class="barrier"> 时间</label>
+              <label style="background:rgba(255,255,255,0.02);padding:8px;border-radius:8px"><input type="checkbox" value="技能" class="barrier"> 技能/经验</label>
+              <label style="background:rgba(255,255,255,0.02);padding:8px;border-radius:8px"><input type="checkbox" value="资金" class="barrier"> 资金</label>
+              <label style="background:rgba(255,255,255,0.02);padding:8px;border-radius:8px"><input type="checkbox" value="决心" class="barrier"> 决心/动力</label>
+              <label style="background:rgba(255,255,255,0.02);padding:8px;border-radius:8px"><input type="checkbox" value="资源" class="barrier"> 资源/网络</label>
+            </div>
+          </label>
+
+          <label>可每周投入的时间（小时）<input id="weeklyHours" type="number" min="0" step="1" value="5" style="width:160px;padding:8px;border-radius:8px;margin-top:6px;border:1px solid rgba(255,255,255,0.04);background:#021024;color:#e6eef8"></label>
+
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="planBtn">生成未来规划建议</button>
+            <button class="secondary btn" id="clearPlanBtn">清空规划输入</button>
+          </div>
+
+          <div id="planResult" style="display:none;margin-top:8px">
+            <h4>规划建议</h4>
+            <div id="planSummary" class="muted"></div>
+            <div style="margin-top:8px">
+              <strong>推荐优先级与第一个 30 天行动：</strong>
+              <div id="first30" style="margin-top:6px"></div>
+            </div>
+          </div>
+        </div>
+
+        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)">
+
+        <h3>三、导出：生涯规划 PPT（Markdown）</h3>
+        <div class="muted">系统会把 MBTI 结果、职业推荐、以及未来规划建议合并成一个 Markdown 风格的 PPT（每个 slide 用三条短横线分隔）</div>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+          <button class="btn" id="exportMdBtn">生成并下载 Markdown PPT (.md)</button>
+          <button class="secondary btn" id="copyMdBtn">复制到剪贴板</button>
+        </div>
+        <div style="margin-top:10px">
+          <label>预览（可编辑）：</label>
+          <textarea id="mdPreview" placeholder="在此处预览或微调生成的 Markdown"></textarea>
+        </div>
+
+      </main>
+
+      <aside class="card">
+        <h4>使用帮助</h4>
+        <div class="muted">1) 完成 20 题后点击“计算 MBTI”。 2) 填写未来规划问卷并生成建议。 3) 点击导出生成 Markdown PPT 并下载或复制。</div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)">
+
+        <h4>MBTI 简短说明</h4>
+        <div class="muted">MBTI 由 4 个维度组成：外向(E) / 内向(I)、实感(S) / 直觉(N)、思考(T) / 情感(F)、判断(J) / 知觉(P)。本测试为自我评估工具，仅供参考。</div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)">
+
+        <h4>示例职业映射</h4>
+        <div class="career-item"><strong>INTJ</strong> — 战略咨询 / 数据科学 / 产品策略</div>
+        <div class="career-item"><strong>ESFP</strong> — 活动策划 / 销售 / 表演艺术</div>
+
+        <div style="margin-top:12px">需要我把题目数量改为更少或更详细吗？点击下方告诉我你想要的变化。</div>
+      </aside>
+    </div>
+
+    <footer>由 AI 助手生成的交互式单页应用演示 — 可离线保存为 .html 文件并在浏览器中打开运行</footer>
+  </div>
+
+  <script>
+    // 题目库：每题关联一个维度 "EI","SN","TF","JP" 以及选项 A 对应哪一端
+    const questionsData = [
+      {q:"1. 在社交场合你会更倾向于：", axis:"EI", a:"E", aText:"主动与多人交谈", bText:"与熟悉的几个人深入交谈", b:"I"},
+      {q:"2. 你处理信息时更相信：", axis:"SN", a:"S", aText:"具体事实与经验", bText:"抽象可能性与洞见", b:"N"},
+      {q:"3. 做决定时你更重视：", axis:"TF", a:"T", aText:"逻辑与客观分析", bText:"价值观与人际感受", b:"F"},
+      {q:"4. 你的生活更倾向于：", axis:"JP", a:"J", aText:"有计划、按步骤进行", bText:"灵活、随机应变", b:"P"},
+
+      {q:"5. 在新环境中你通常：", axis:"EI", a:"E", aText:"主动认识新朋友", bText:"先观察然后参与", b:"I"},
+      {q:"6. 你更喜欢的信息类型是：", axis:"SN", a:"N", aText:"未来趋势与可能性", bText:"事实和细节", b:"S"},
+      {q:"7. 当冲突发生你会：", axis:"TF", a:"T", aText:"直接指出问题并分析", bText:"关注他人感受并寻求妥协", b:"F"},
+      {q:"8. 你的办公风格是：", axis:"JP", a:"P", aText:"随需要调整计划", bText:"安排好时间并遵守", b:"J"},
+
+      {q:"9. 你更愿意花时间在：", axis:"EI", a:"I", aText:"独处、沉思", bText:"社交与群体活动", b:"E"},
+      {q:"10. 你在学习时偏好：", axis:"SN", a:"S", aText:"实例与练习", bText:"模型与理论", b:"N"},
+      {q:"11. 做复杂决策时你更看重：", axis:"TF", a:"F", aText:"对人是否公平与关怀", bText:"系统化的最优解", b:"T"},
+      {q:"12. 处理任务你更喜欢：", axis:"JP", a:"J", aText:"先列清单再完成", bText:"边做边调整", b:"P"},
+
+      {q:"13. 在聚会中你通常：", axis:"EI", a:"E", aText:"很快热起来并活跃气氛", bText:"只和几个人深入交流", b:"I"},
+      {q:"14. 你更容易被说服的是：", axis:"SN", a:"N", aText:"创新的概念", bText:"经过验证的做法", b:"S"},
+      {q:"15. 你在评价一个方案时：", axis:"TF", a:"T", aText:"注重数据与结果", bText:"注重是否顾及人心", b:"F"},
+      {q:"16. 你规划旅行时：", axis:"JP", a:"P", aText:"临时决定并享受随性", bText:"提前订好行程", b:"J"},
+
+      {q:"17. 工作中你更看重：", axis:"EI", a:"E", aText:"团队协作与互动", bText:"深度独立工作", b:"I"},
+      {q:"18. 你更喜欢的阅读材料是：", axis:"SN", a:"S", aText:"实用指南与案例", bText:"理论书与哲学", b:"N"},
+      {q:"19. 当有人需要建议你会：", axis:"TF", a:"F", aText:"先顾及对方感受", bText:"直接给出分析和建议", b:"T"},
+      {q:"20. 对于未完成的事情你通常：", axis:"JP", a:"J", aText:"尽快完成以免拖延", bText:"留着选项以备变化", b:"P"}
+    ];
+
+    // 职业推荐映射（简化示例）
+    const careerMap = {
+      'INTJ':['战略咨询师','数据科学家','产品策略经理','研究员'],
+      'INTP':['研究工程师','软件架构师','大学讲师','数据工程师'],
+      'INFJ':['心理咨询师','用户体验研究','教育策划','作家'],
+      'INFP':['内容创作者','品牌文案','社会工作者','艺术家'],
+      'ISTJ':['财务分析师','项目经理','审计师','系统管理员'],
+      'ISFJ':['人力资源','护理/医疗支持','行政经理','客户成功'],
+      'ISTP':['工业设计师','运维工程师','设备工程师','救援人员'],
+      'ISFP':['平面设计师','摄影师','园艺师','产品设计师'],
+      'ENTJ':['企业高管','运营总监','创业者','投资人'],
+      'ENTP':['创新经理','创业者','战略顾问','市场拓展'],
+      'ENFJ':['培训师','品牌经理','公关','组织发展顾问'],
+      'ENFP':['内容策划','创意总监','市场营销','活动策划'],
+      'ESTJ':['运营经理','工程项目经理','质量管理','政府公务员'],
+      'ESFJ':['客户关系经理','学校教师','活动执行','医疗协调'],
+      'ESTP':['销售经理','现场经理','危机应对','运动相关职业'],
+      'ESFP':['活动策划','演艺','零售管理','体验设计']
+    };
+
+    // 渲染题目
+    const qRoot = document.getElementById('questions');
+    questionsData.forEach((it,idx)=>{
+      const div = document.createElement('div');div.className='q';
+      div.innerHTML = `<h4>${it.q}</h4>
+        <div class="opts">
+          <label class="option"><input type="radio" name="q${idx}" value="A"> ${it.aText}</label>
+          <label class="option"><input type="radio" name="q${idx}" value="B"> ${it.bText}</label>
+        </div>`;
+      qRoot.appendChild(div);
+    });
+
+    // 统计已答
+    const answeredCountEl = document.getElementById('answeredCount');
+    qRoot.addEventListener('change',()=>{
+      const radios = qRoot.querySelectorAll('input[type=radio]');
+      const names = new Set();
+      radios.forEach(r=>{ if(r.checked) names.add(r.name); });
+      answeredCountEl.textContent = names.size;
+    });
+
+    function computeMBTI(){
+      // 初始化计分
+      const score = {E:0,I:0,S:0,N:0,T:0,F:0,J:0,P:0};
+      const radios = qRoot.querySelectorAll('input[type=radio]');
+      const answered = new Set();
+      radios.forEach(r=>{ if(r.checked){ const name=r.name; answered.add(name); } });
+      if(answered.size < questionsData.length){
+        if(!confirm('你还有题目未完成，仍然生成结果吗？（推荐先完成全部题目以获得更准确的结果）')) return null;
+      }
+      // 对每题计分
+      questionsData.forEach((it,idx)=>{
+        const sel = document.querySelector(`input[name=q${idx}]:checked`);
+        let choice = sel ? sel.value : null;
+        if(!choice) return;
+        if(choice === 'A') score[it.a] = (score[it.a]||0)+1;
+        else if(choice === 'B') score[it.b] = (score[it.b]||0)+1;
+      });
+      // 构造四个字母
+      const first = score.E >= score.I ? 'E' : 'I';
+      const second = score.S >= score.N ? 'S' : 'N';
+      const third = score.T >= score.F ? 'T' : 'F';
+      const fourth = score.J >= score.P ? 'J' : 'P';
+      return {score,mbti:first+second+third+fourth};
+    }
+
+    document.getElementById('calcBtn').addEventListener('click',()=>{
+      const res = computeMBTI(); if(!res) return;
+      document.getElementById('resultSection').style.display='block';
+      document.getElementById('mbtiTag').textContent = res.mbti;
+      const bd = `E:${res.score.E} I:${res.score.I} | S:${res.score.S} N:${res.score.N} | T:${res.score.T} F:${res.score.F} | J:${res.score.J} P:${res.score.P}`;
+      document.getElementById('scoreBreakdown').textContent = bd;
+
+      // 职业推荐
+      const recRoot = document.getElementById('careerRec'); recRoot.innerHTML='';
+      const recs = careerMap[res.mbti] || [];
+      recs.slice(0,6).forEach(c=>{
+        const el = document.createElement('div');el.className='career-item';el.textContent = c;recRoot.appendChild(el);
+      });
+
+      // 把结果保存在全局，方便导出
+      window.__lastResult = {mbti:res.mbti,score:res.score,recs:recs};
+
+      // 同步到 md 预览（如果已有规划也一起合并）
+      refreshMdPreview();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click',()=>{
+      const radios = qRoot.querySelectorAll('input[type=radio]'); radios.forEach(r=>r.checked=false); answeredCountEl.textContent='0'; document.getElementById('resultSection').style.display='none'; window.__lastResult=null; document.getElementById('mdPreview').value='';
+    });
+
+    // 未来规划
+    document.getElementById('planBtn').addEventListener('click',()=>{
+      const goal = document.getElementById('goalText').value.trim();
+      const timeline = document.getElementById('goalTimeline').value.trim();
+      const hours = Number(document.getElementById('weeklyHours').value || 0);
+      const barriers = Array.from(document.querySelectorAll('.barrier:checked')).map(i=>i.value);
+      if(!goal){ alert('请填写主要目标'); return; }
+      // 简单评分
+      let readiness = 50;
+      if(hours >= 15) readiness += 20; else if(hours >=8) readiness += 10; else if(hours>=3) readiness +=5;
+      readiness -= barriers.length * 8;
+      if(readiness<5) readiness=5; if(readiness>95) readiness=95;
+
+      const summary = `目标：${goal}\n时限：${timeline || '未填写'}\n每周可投入：${hours} 小时\n主要阻碍：${barriers.join(', ') || '无'}`;
+      document.getElementById('planResult').style.display='block';
+      document.getElementById('planSummary').textContent = summary;
+
+      // 生成 30 天行动
+      const first30 = [];
+      first30.push(`第1周：明确目标的衡量指标（KR）并分解出 3 个小任务（每项 1-3 天）`);
+      if(hours >= 8) first30.push('第2周：完成至少 1 个技能练习或课程模块（至少 5 小时）');
+      else first30.push('第2周：安排短时高频学习计划（每天 30-60 分钟）');
+      if(!barriers.includes('资金')) first30.push('第3周：尝试小规模实践（做一个样品/项目/简历升级）');
+      if(barriers.includes('资源')) first30.push('第3周：加入相关社群并建立 3 个有价值的联系');
+      first30.push('第4周：整理成果并设定 3 个月目标与检查点');
+
+      document.getElementById('first30').innerHTML = first30.map(x=>`<div class="muted">• ${x}</div>`).join('');
+
+      window.__lastPlan = {goal,timeline,hours,barriers,readiness,first30};
+
+      refreshMdPreview();
+    });
+
+    document.getElementById('clearPlanBtn').addEventListener('click',()=>{
+      document.getElementById('goalText').value='';document.getElementById('goalTimeline').value='';document.getElementById('weeklyHours').value=5;document.querySelectorAll('.barrier:checked').forEach(i=>i.checked=false);document.getElementById('planResult').style.display='none';window.__lastPlan=null;refreshMdPreview();
+    });
+
+    // 生成 Markdown PPT
+    function buildMarkdown(){
+      const r = window.__lastResult || {mbti:'未生成',score:{},recs:[]};
+      const p = window.__lastPlan || {goal:'未填写',timeline:'未填写',hours:0,barriers:[],first30:[]};
+      const lines = [];
+      lines.push(`# 生涯规划演示文稿`);
+      lines.push(`---`);
+      lines.push(`## 个人简介与测试概览`);
+      lines.push(`- 测试类型：MBTI 人格测试`);
+      lines.push(`- MBTI：**${r.mbti}**`);
+      lines.push(`- 得分：E:${r.score.E||0} I:${r.score.I||0} | S:${r.score.S||0} N:${r.score.N||0} | T:${r.score.T||0} F:${r.score.F||0} | J:${r.score.J||0} P:${r.score.P||0}`);
+      lines.push(`---`);
+      lines.push(`## 推荐职业（基于 MBTI）`);
+      if(r.recs && r.recs.length){ r.recs.forEach(c=>lines.push(`- ${c}`)); } else lines.push('- （无推荐，须先完成 MBTI 测试）');
+      lines.push(`---`);
+      lines.push(`## 未来目标与时限`);
+      lines.push(`- 主要目标：${p.goal}`);
+      lines.push(`- 目标时限：${p.timeline}`);
+      lines.push(`- 每周可投入时间：${p.hours} 小时`);
+      lines.push(`- 主要阻碍：${p.barriers.join(', ') || '无'}`);
+      lines.push(`---`);
+      lines.push(`## 优先级与第一个 30 天行动计划`);
+      lines.push(`- 整体准备度评估（0-100）：${p.readiness || '未评估'}`);
+      (p.first30||[]).forEach(s=>lines.push(`- ${s}`));
+      lines.push(`---`);
+      lines.push(`## 90 天增长路线（示例）`);
+      lines.push(`1. 0-30 天：明确 KR、完成第一个小项目并加入社群`);
+      lines.push(`2. 31-60 天：系统化学习（每天/每周计划），完成第二个小项目`);
+      lines.push(`3. 61-90 天：准备作品集/案例并开始申请或拓展人脉`);
+      lines.push(`---`);
+      lines.push(`## 资源与下一步`);
+      lines.push(`- 推荐学习平台：Coursera / Udemy / edX 等`);
+      lines.push(`- 建议：每周固定 2 次复盘，记录进展与阻碍`);
+      lines.push(`---`);
+      lines.push(`复制结果到剪切板发我`);
+      return lines.join('\n');
+    }
+
+    function refreshMdPreview(){
+      const md = buildMarkdown();
+      document.getElementById('mdPreview').value = md;
+    }
+
+    document.getElementById('exportMdBtn').addEventListener('click',()=>{
+      const md = buildMarkdown();
+      const blob = new Blob([md],{type:'text/markdown;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `career_plan_${(window.__lastResult && window.__lastResult.mbti) || 'unknown'}.md`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('copyMdBtn').addEventListener('click',async()=>{
+      try{
+        await navigator.clipboard.writeText(document.getElementById('mdPreview').value);
+        alert('已复制到剪贴板');
+      }catch(e){ alert('复制失败：请手动复制或使用浏览器允许的剪贴板权限'); }
+    });
+
+    // 初始化默认预览
+    refreshMdPreview();
+  </script>
+</body>
+</html>
