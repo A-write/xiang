@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优势识别器测试</title>
+    <style>
+        /* 全局样式 - 苹果风格 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.47059;
+            font-weight: 400;
+            letter-spacing: -0.022em;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* 标题样式 */
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.08349;
+            letter-spacing: -0.003em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h2 {
+            font-size: 28px;
+            font-weight: 600;
+            line-height: 1.14286;
+            letter-spacing: 0.007em;
+            margin: 30px 0 15px;
+        }
+        
+        /* 段落样式 */
+        p {
+            font-size: 17px;
+            line-height: 1.47059;
+            font-weight: 400;
+            letter-spacing: -0.022em;
+            margin-bottom: 15px;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background-color: #ffffff;
+            border-radius: 18px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            display: inline-block;
+            background: #0071e3;
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            background: #0077ed;
+            transform: scale(1.04);
+        }
+        
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.05);
+            color: #1d1d1f;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 测试区域样式 */
+        .test-container {
+            display: none;
+        }
+        
+        .question {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #d2d2d7;
+        }
+        
+        .question:last-child {
+            border-bottom: none;
+        }
+        
+        .question-text {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 12px;
+            background-color: rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .option:hover {
+            background-color: rgba(0, 0, 0, 0.06);
+        }
+        
+        .option.selected {
+            background-color: rgba(0, 113, 227, 0.1);
+            border: 1px solid #0071e3;
+        }
+        
+        .option input {
+            margin-right: 12px;
+        }
+        
+        /* 进度条 */
+        .progress-container {
+            margin: 30px 0;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: #0071e3;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        /* 结果区域 */
+        .result-container {
+            display: none;
+            text-align: center;
+        }
+        
+        .strength-card {
+            display: inline-block;
+            background: linear-gradient(135deg, #0071e3, #42a1ec);
+            color: white;
+            border-radius: 18px;
+            padding: 20px;
+            margin: 10px;
+            width: 180px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 113, 227, 0.3);
+        }
+        
+        .strength-rank {
+            font-size: 40px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .strength-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
+            
+            .container {
+                padding: 20px 10px;
+            }
+            
+            .strength-card {
+                width: 140px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 介绍页面 -->
+        <div id="intro-container">
+            <h1>优势识别器测试</h1>
+            <div class="card">
+                <h2>发现你的独特优势</h2>
+                <p>本测试基于盖洛普优势识别器理念设计，通过一系列问题帮助你识别自己最突出的天赋和优势。</p>
+                <p>测试完成后，你将获得你的五大优势排序，可用于课堂活动中的"真相和谎言"游戏。</p>
+                <p>测试大约需要10-15分钟完成。请根据你的第一反应选择答案，不要过多思考。</p>
+                <div style="text-align: center; margin-top: 30px;">
+                    <button id="start-btn" class="btn">开始测试</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>如何使用测试结果</h2>
+                <p>在课堂活动中，你可以：</p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li>根据测试结果，结合日常表现，做自我描述</li>
+                    <li>列出5个真实优势和3个虚构优势</li>
+                    <li>让同学猜测哪3个是假的</li>
+                    <li>讨论"他人眼中的我"与自我认知的差异</li>
+                </ul>
+                <p>这有助于你了解自己的"开放我"、"隐藏我"和"未知我"。</p>
+            </div>
+        </div>
+        
+        <!-- 测试页面 -->
+        <div id="test-container" class="test-container">
+            <h1>优势识别器测试</h1>
+            
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div id="progress" class="progress"></div>
+                </div>
+                <p id="progress-text">问题 1/20</p>
+            </div>
+            
+            <div class="card">
+                <div id="questions-container">
+                    <!-- 问题将通过JavaScript动态生成 -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button id="prev-btn" class="btn btn-secondary" style="margin-right: 10px;">上一题</button>
+                    <button id="next-btn" class="btn">下一题</button>
+                    <button id="submit-btn" class="btn" style="display: none;">查看结果</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 结果页面 -->
+        <div id="result-container" class="result-container">
+            <h1>你的五大优势</h1>
+            <div class="card">
+                <p>根据你的回答，我们识别出了以下五大优势。这些是你的天赋所在，可以在生活和学习中重点发挥。</p>
+                
+                <div id="strengths-container" style="margin: 30px 0;">
+                    <!-- 优势结果将通过JavaScript动态生成 -->
+                </div>
+                
+                <div style="margin-top: 40px;">
+                    <h2>下一步行动</h2>
+                    <p>在课堂活动中，你可以：</p>
+                    <ul style="margin-left: 20px; margin-bottom: 20px;">
+                        <li>使用这些真实优势进行自我描述</li>
+                        <li>添加3个听起来合理但不是你的优势</li>
+                        <li>与同学分享并让他们猜测哪些是假的</li>
+                    </ul>
+                    <div style="text-align: center;">
+                        <button id="restart-btn" class="btn">重新测试</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 测试问题数据
+        const questions = [
+            {
+                text: "在团队项目中，我通常扮演什么角色？",
+                options: [
+                    "组织者和领导者",
+                    "创意提供者",
+                    "细节执行者",
+                    "团队协调者",
+                    "分析问题的人"
+                ]
+            },
+            {
+                text: "当我面对新挑战时，我的第一反应是？",
+                options: [
+                    "分析所有可能的方法",
+                    "立即开始尝试",
+                    "寻求他人的建议",
+                    "制定详细的计划",
+                    "思考如何将其转化为机会"
+                ]
+            },
+            {
+                text: "在社交场合中，我通常：",
+                options: [
+                    "主动与人交谈并结识新朋友",
+                    "与熟悉的人深入交流",
+                    "观察他人并分析互动",
+                    "等待他人主动接近我",
+                    "分享有趣的想法或故事"
+                ]
+            },
+            {
+                text: "当我学习新知识时，我最喜欢：",
+                options: [
+                    "通过实践来学习",
+                    "阅读相关资料",
+                    "与他人讨论",
+                    "观看教学视频",
+                    "自己探索和实验"
+                ]
+            },
+            {
+                text: "面对压力时，我通常会：",
+                options: [
+                    "制定计划并逐步执行",
+                    "寻求他人的支持",
+                    "专注于解决问题",
+                    "暂时休息调整心态",
+                    "将压力转化为动力"
+                ]
+            },
+            {
+                text: "在解决问题时，我倾向于：",
+                options: [
+                    "寻找创新的解决方案",
+                    "使用已被验证的方法",
+                    "咨询专家意见",
+                    "分析问题的根本原因",
+                    "尝试多种方法直到找到有效的"
+                ]
+            },
+            {
+                text: "当团队有分歧时，我通常会：",
+                options: [
+                    "帮助各方找到共同点",
+                    "提出折中方案",
+                    "支持我认为正确的观点",
+                    "分析每种观点的优缺点",
+                    "引导讨论走向更有建设性的方向"
+                ]
+            },
+            {
+                text: "对于未来的规划，我：",
+                options: [
+                    "有明确的目标和计划",
+                    "保持灵活性，随时调整",
+                    "专注于当前的任务",
+                    "考虑多种可能性",
+                    "相信船到桥头自然直"
+                ]
+            },
+            {
+                text: "当我完成一项任务时，我最关注：",
+                options: [
+                    "结果的完美程度",
+                    "是否按时完成",
+                    "过程中的学习",
+                    "团队的合作体验",
+                    "是否达到预期目标"
+                ]
+            },
+            {
+                text: "在空闲时间，我更喜欢：",
+                options: [
+                    "学习新技能或知识",
+                    "与朋友和家人相处",
+                    "独自思考或反思",
+                    "参与体育活动",
+                    "从事创造性活动"
+                ]
+            },
+            {
+                text: "当他人向我求助时，我通常：",
+                options: [
+                    "尽力提供解决方案",
+                    "倾听并给予情感支持",
+                    "帮助他们自己找到答案",
+                    "分享类似的经验",
+                    "引导他们寻找专业帮助"
+                ]
+            },
+            {
+                text: "对于细节，我：",
+                options: [
+                    "非常关注，很少出错",
+                    "会注意，但偶尔会忽略",
+                    "依赖他人检查细节",
+                    "只关注重要的细节",
+                    "有系统的方法来管理细节"
+                ]
+            },
+            {
+                text: "当需要做决定时，我通常：",
+                options: [
+                    "快速做出决定",
+                    "收集大量信息后再决定",
+                    "咨询他人意见",
+                    "相信直觉",
+                    "权衡各种选择的利弊"
+                ]
+            },
+            {
+                text: "在团队中，我的价值主要体现在：",
+                options: [
+                    "提供创意和新思路",
+                    "确保任务按时完成",
+                    "维持团队和谐",
+                    "解决复杂问题",
+                    "连接不同团队成员"
+                ]
+            },
+            {
+                text: "对于规则和程序，我：",
+                options: [
+                    "严格遵守",
+                    "理解其目的但会灵活应用",
+                    "认为它们常常限制创新",
+                    "会改进它们使其更有效",
+                    "只在必要时遵守"
+                ]
+            },
+            {
+                text: "当我面对批评时，我通常：",
+                options: [
+                    "认真考虑并从中学习",
+                    "为自己辩护",
+                    "感到受伤但不会表现出来",
+                    "询问具体细节以更好理解",
+                    "区分有用和无用的批评"
+                ]
+            },
+            {
+                text: "在学习和工作中，我最大的动力来自：",
+                options: [
+                    "成就感",
+                    "他人的认可",
+                    "个人成长",
+                    "帮助他人",
+                    "解决挑战"
+                ]
+            },
+            {
+                text: "当项目遇到障碍时，我通常会：",
+                options: [
+                    "寻找替代方案",
+                    "加倍努力克服障碍",
+                    "寻求他人帮助",
+                    "重新评估目标",
+                    "分解问题逐步解决"
+                ]
+            },
+            {
+                text: "对于不熟悉的任务，我：",
+                options: [
+                    "感到兴奋并乐于接受挑战",
+                    "谨慎评估自己的能力",
+                    "寻找相关资源学习",
+                    "希望有指导或培训",
+                    "将其视为学习机会"
+                ]
+            },
+            {
+                text: "在团队中，我最不喜欢：",
+                options: [
+                    "缺乏明确的目标",
+                    "沟通不畅",
+                    "不尊重他人意见",
+                    "效率低下",
+                    "缺乏创新思维"
+                ]
+            }
+        ];
+
+        // 优势类型
+        const strengths = [
+            "战略思维", "执行力", "影响力", "关系建立", "学习能力",
+            "适应力", "分析能力", "沟通能力", "创造力", "领导力",
+            "团队合作", "责任感", "同理心", "决断力", "韧性"
+        ];
+
+        // DOM元素
+        const introContainer = document.getElementById('intro-container');
+        const testContainer = document.getElementById('test-container');
+        const resultContainer = document.getElementById('result-container');
+        const startBtn = document.getElementById('start-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const questionsContainer = document.getElementById('questions-container');
+        const progressBar = document.getElementById('progress');
+        const progressText = document.getElementById('progress-text');
+        const strengthsContainer = document.getElementById('strengths-container');
+
+        // 测试状态
+        let currentQuestion = 0;
+        let answers = new Array(questions.length).fill(null);
+
+        // 初始化测试
+        function initTest() {
+            currentQuestion = 0;
+            answers = new Array(questions.length).fill(null);
+            renderQuestion();
+            updateProgress();
+        }
+
+        // 渲染当前问题
+        function renderQuestion() {
+            const question = questions[currentQuestion];
+            let html = `<div class="question">
+                <div class="question-text">${currentQuestion + 1}. ${question.text}</div>
+                <div class="options">`;
+            
+            question.options.forEach((option, index) => {
+                const isSelected = answers[currentQuestion] === index;
+                html += `<div class="option ${isSelected ? 'selected' : ''}" data-index="${index}">
+                    <input type="radio" name="question-${currentQuestion}" id="option-${currentQuestion}-${index}" 
+                        ${isSelected ? 'checked' : ''}>
+                    <label for="option-${currentQuestion}-${index}">${option}</label>
+                </div>`;
+            });
+            
+            html += `</div></div>`;
+            questionsContainer.innerHTML = html;
+            
+            // 添加选项点击事件
+            document.querySelectorAll('.option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const optionIndex = parseInt(this.getAttribute('data-index'));
+                    answers[currentQuestion] = optionIndex;
+                    renderQuestion();
+                });
+            });
+            
+            // 更新按钮状态
+            prevBtn.style.display = currentQuestion === 0 ? 'none' : 'inline-block';
+            nextBtn.style.display = currentQuestion === questions.length - 1 ? 'none' : 'inline-block';
+            submitBtn.style.display = currentQuestion === questions.length - 1 ? 'inline-block' : 'none';
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `问题 ${currentQuestion + 1}/${questions.length}`;
+        }
+
+        // 计算测试结果
+        function calculateResults() {
+            // 简化版的优势计算逻辑
+            // 在实际应用中，这里会有更复杂的算法
+            
+            // 随机生成5个优势（模拟测试结果）
+            const shuffled = [...strengths].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, 5);
+        }
+
+        // 显示结果
+        function showResults() {
+            const topStrengths = calculateResults();
+            
+            let html = '';
+            topStrengths.forEach((strength, index) => {
+                html += `<div class="strength-card">
+                    <div class="strength-rank">${index + 1}</div>
+                    <div class="strength-name">${strength}</div>
+                </div>`;
+            });
+            
+            strengthsContainer.innerHTML = html;
+        }
+
+        // 事件监听
+        startBtn.addEventListener('click', function() {
+            introContainer.style.display = 'none';
+            testContainer.style.display = 'block';
+            initTest();
+        });
+
+        prevBtn.addEventListener('click', function() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                renderQuestion();
+                updateProgress();
+            }
+        });
+
+        nextBtn.addEventListener('click', function() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                renderQuestion();
+                updateProgress();
+            }
+        });
+
+        submitBtn.addEventListener('click', function() {
+            // 检查是否所有问题都已回答
+            const unanswered = answers.filter(answer => answer === null).length;
+            if (unanswered > 0) {
+                alert(`您还有 ${unanswered} 个问题未回答，请完成所有问题后再提交。`);
+                return;
+            }
+            
+            testContainer.style.display = 'none';
+            resultContainer.style.display = 'block';
+            showResults();
+        });
+
+        restartBtn.addEventListener('click', function() {
+            resultContainer.style.display = 'none';
+            introContainer.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
