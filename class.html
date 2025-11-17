@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>查班社团统计工具（自由格式输入）</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    textarea { width: 100%; height: 200px; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 8px; white-space: pre-wrap; }
+    .btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; background: #4caf50; color: white; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h2>📋 社团统计工具（自由格式输入）</h2>
+  <p>每行格式：社团名数量，空格分隔，可多组，例如：<br>普通话4 朗读3 技能5</p>
+
+  <textarea id="rawInput" placeholder="在这里输入社团数据，每行一班..."></textarea>
+  <br /><br />
+  <button class="btn" onclick="processTable()">统计社团总人数</button>
+
+  <h3>📊 社团统计结果：</h3>
+  <pre id="output"></pre>
+
+<script>
+function processTable() {
+  const raw = document.getElementById('rawInput').value;
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length);
+
+  const clubTotals = {};
+
+  lines.forEach(line => {
+    const items = line.split(' ').map(x => x.trim()).filter(x => x);
+    items.forEach(item => {
+      const match = item.match(/^(.+?)(\d+)$/);
+      if(match) {
+        const name = match[1];
+        const count = parseInt(match[2]) || 0;
+        if(!clubTotals[name]) clubTotals[name] = 0;
+        clubTotals[name] += count;
+      }
+    });
+  });
+
+  let out = '===== 社团总计 =====\n';
+  Object.keys(clubTotals).forEach(k => { out += `${k}: ${clubTotals[k]}\n`; });
+
+  document.getElementById('output').textContent = out;
+}
+</script>
+</body>
+</html>
