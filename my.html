@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>陈梦莹/title>
+  <!-- 简短样式与注释：下面的 CSS 控制礼物、丝带与平板的外观与动画 -->
+  <style>
+    /* 页面整体布局：居中、舒适的背景 */
+    html,body{height:100%;margin:0;padding:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#f7f9ff,#eef6ff);color:#222}
+
+    /* 容器：控制整体可视区域 */
+    .card{width:360px;max-width:90vw;padding:22px;border-radius:14px;box-shadow:0 10px 30px rgba(20,40,80,0.12);background:linear-gradient(180deg,#fff,#fbfcff);text-align:center}
+
+    /* 标题 */
+    .title{font-size:18px;margin:0 0 12px}
+    .subtitle{font-size:13px;color:#5b6b8a;margin:0 0 18px}
+
+    /* 礼物盒主体（正方形） */
+    .gift{width:220px;height:220px;margin:0 auto;position:relative;cursor:pointer;user-select:none}
+    .box{position:absolute;left:0;right:0;top:0;bottom:0;background:#ff6b6b;border-radius:12px;display:flex;align-items:center;justify-content:center;transition:transform 600ms cubic-bezier(.2,.9,.35,1),box-shadow 200ms}
+
+    /* 礼盒阴影与按压反馈 */
+    .gift:active .box{transform:translateY(3px)}
+
+    /* 丝带（垂直与水平） */
+    .ribbon-vertical{position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:36px;background:linear-gradient(180deg,#ff9a9a,#ff4d4d);border-radius:8px}
+    .ribbon-horizontal{position:absolute;top:50%;left:0;right:0;height:36px;transform:translateY(-50%);background:linear-gradient(90deg,#ffd1d1,#ff7a7a);border-radius:8px}
+
+    /* 蝴蝶结（盖子上的装饰） */
+    .bow{position:absolute;left:50%;top:18px;transform:translateX(-50%);width:86px;height:40px;display:flex;align-items:center;justify-content:center}
+    .bow .l,.bow .r{width:38px;height:30px;border-radius:6px;background:linear-gradient(90deg,#fff5f5,#ffdede);box-shadow:inset 0 -6px 10px rgba(255,100,100,0.12)}
+    .bow .knot{width:18px;height:18px;border-radius:50%;background:#ffecec;margin:0 6px;box-shadow:inset 0 -4px 8px rgba(255,120,120,0.08)}
+
+    /* 盖子（lid）与下半盒体（base）分离，方便动画：盖子在上半部分会抬起并旋转 */
+    .lid{position:absolute;left:0;right:0;top:-6px;height:116px;border-radius:12px;background:inherit;transition:transform 700ms cubic-bezier(.2,.9,.35,1)}
+    .base{position:absolute;left:0;right:0;bottom:0;height:120px;border-radius:12px;background:inherit;box-shadow:0 6px 20px rgba(20,40,80,0.08)}
+
+    /* 当 gift 有 open 类时，盖子抬起并向后翻；礼盒主体略微缩小并变淡 */
+    .gift.open .lid{transform:translateY(-80px) rotateX(15deg) rotateY(-6deg)}
+    .gift.open .box{transform:scale(0.94);box-shadow:0 18px 40px rgba(20,40,80,0.12)}
+
+    /* 平板画面容器：默认隐藏，打开礼物时淡入并放大 */
+    .tablet-wrap{position:relative;margin-top:12px;height:0;overflow:visible;pointer-events:none}
+    .tablet{width:260px;height:160px;margin:0 auto;border-radius:14px;background:#0f1724;color:#fff;padding:12px;box-shadow:0 18px 40px rgba(10,20,40,0.18);transform:translateY(10px) scale(0.92);opacity:0;transition:opacity 500ms ease,transform 600ms cubic-bezier(.2,.9,.35,1);pointer-events:auto}
+    .gift.open ~ .tablet-wrap .tablet{opacity:1;transform:translateY(0) scale(1)}
+
+    /* 平板上用于放图片的占位 */
+    .screen{width:100%;height:100%;background:linear-gradient(180deg,#111,#0d1b2a);display:flex;align-items:center;justify-content:center;border-radius:10px;overflow:hidden}
+    .screen img{max-width:100%;max-height:100%;display:block}
+
+    /* 控制提示文字与按钮 */
+    .hint{font-size:13px;color:#3a4a66;margin-top:14px}
+    .btn{margin-top:10px;display:inline-block;padding:8px 12px;border-radius:8px;border:0;background:#4b8cff;color:#fff;font-weight:600;cursor:pointer}
+    .btn:focus{outline:3px solid rgba(75,140,255,0.18)}
+
+    /* 关闭按钮在平板显现时出现 */
+    .close{position:absolute;right:10px;top:8px;border-radius:6px;padding:6px 8px;border:0;background:rgba(255,255,255,0.06);color:#fff;cursor:pointer}
+  </style>
+</head>
+<body>
+  <!-- 主卡片，说明与互动区域 -->
+  <main class="card" aria-labelledby="title">
+    <h1 id="title" class="title">给陈梦莹的礼物</h1>
+    <p class="subtitle">点一下礼物的盒子，看看里面有什么惊喜 ✨</p>
+
+    <!-- 这是礼物盒容器：点击会切换 open 类 -->
+    <div class="gift" id="gift" role="button" tabindex="0" aria-pressed="false" aria-label="点击打开礼物">
+      <!-- 礼盒主体（带丝带） -->
+      <div class="box">
+        <!-- 盖子与蝴蝶结视觉放在 box 里方便一起移动 -->
+        <div class="lid" aria-hidden="true"></div>
+        <div class="bow" aria-hidden="true"><div class="l"></div><div class="knot"></div><div class="r"></div></div>
+        <div class="ribbon-vertical" aria-hidden="true"></div>
+        <div class="ribbon-horizontal" aria-hidden="true"></div>
+        <!-- 下半部分：显示一个小标签或图案作为礼物的脸 -->
+        <div class="base" aria-hidden="true">
+          <!-- 可自定义的文字或小图标 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 平板显示区：初始为隐藏，打开礼物则淡入 -->
+    <div class="tablet-wrap" aria-live="polite">
+      <div class="tablet" id="tablet" role="region" aria-label="礼物中的平板展示区域">
+        <button class="close" id="closeBtn" aria-label="关闭平板">✕</button>
+        <div class="screen" id="screen">
+          <!-- 在这里替换平板图片链接（把 YOUR_TABLET_IMAGE_URL_HERE 换成图片 URL） -->
+          <img id="tabletImg" src="https://img30.360buyimg.com/shaidan/jfs/t1/143300/22/9150/103304/5f6b0107E08e541ae/d84f7c147dc0d90b.jpg" alt="平板图片（请替换链接）">
+        </div>
+      </div>
+    </div>
+
+    <p class="hint">提示：请点击礼物盒。</p>
+    <button class="btn" id="toggleBtn" aria-controls="gift">开 / 关 礼物</button>
+  </main>
+
+  <!-- 互动脚本：为礼物添加键盘与点击交互 -->
+  <script>
+    // 获取页面元素引用
+    const gift = document.getElementById('gift'); // 礼物盒容器
+    const toggleBtn = document.getElementById('toggleBtn'); // 下方按钮
+    const closeBtn = document.getElementById('closeBtn'); // 平板上的关闭按钮
+    const tabletImg = document.getElementById('tabletImg'); // 平板图片元素
+
+    // 切换礼物开合的函数：添加/删除 open 类并更新 aria 状态
+    function toggleGift(openState){
+      const willOpen = typeof openState === 'boolean' ? openState : !gift.classList.contains('open');
+      gift.classList.toggle('open', willOpen);
+      gift.setAttribute('aria-pressed', willOpen ? 'true' : 'false');
+      // 若打开，则把焦点移动到平板的关闭按钮，方便键盘用户关闭
+      if(willOpen){
+        closeBtn.focus();
+      } else {
+        toggleBtn.focus();
+      }
+    }
+
+    // 点击礼物盒时切换
+    gift.addEventListener('click', ()=> toggleGift());
+
+    // 下方按钮也能控制开关
+    toggleBtn.addEventListener('click', ()=> toggleGift());
+
+    // 关闭按钮仅在平板显示时可见，点击关闭
+    closeBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleGift(false); });
+
+    // 键盘支持：空格/回车 在礼物上触发；Esc 关闭
+    gift.addEventListener('keydown', (e)=>{
+      if(e.code === 'Space' || e.code === 'Enter'){
+        e.preventDefault(); toggleGift();
+      }
+      if(e.code === 'Escape'){
+        e.preventDefault(); toggleGift(false);
+      }
+    });
+
+    // 全局按键：Esc 关闭礼物
+    document.addEventListener('keydown', (e)=>{
+      if(e.code === 'Escape' && gift.classList.contains('open')){
+        toggleGift(false);
+      }
+    });
+
+    // 友好提示（可删）：如果用户忘了换图片，会保留占位并提示替换链接
+    if(tabletImg.getAttribute('src') === 'YOUR_TABLET_IMAGE_URL_HERE'){
+      tabletImg.alt = '占位：请将 img#tabletImg 的 src 替换为平板图片链接';
+    }
+
+    // 额外：允许通过 URL 参数传入平板图片，例如 ?img=https://... ，方便你直接预览
+    (function maybeLoadFromQuery(){
+      try{
+        const params = new URLSearchParams(location.search);
+        const url = params.get('img');
+        if(url){
+          tabletImg.src = url;
+          tabletImg.alt = '来自 URL 参数的平板图片';
+        }
+      }catch(e){/* 忽略解析错误 */}
+    })();
+  </script>
+</body>
+</html>
